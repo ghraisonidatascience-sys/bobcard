@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOBCARD - Modern Credit Card App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        ::-webkit-scrollbar { display: none; }
+        .card-flick {
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            display: flex;
+            padding-bottom: 1rem;
+        }
+        .card-flick > div {
+            scroll-snap-align: center;
+            flex: 0 0 85%;
+            margin-right: 1rem;
+        }
+        
+        /* Theming Variables */
+        :root {
+            --brand-color: #f47437;
+            --brand-color-dark: #e0682f;
+            /* Dark Theme Colors */
+            --bg-primary: #000000;
+            --bg-secondary: #111827;
+            --bg-tertiary: #1f2937;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+        }
+        
+        body.light-theme {
+            /* Light Theme Colors */
+            --bg-primary: #f3f4f6;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #d1d5db;
+        }
+
+        /* Themed Utility Classes */
+        .bg-primary { background-color: var(--bg-primary); }
+        .bg-secondary { background-color: var(--bg-secondary); }
+        .bg-tertiary { background-color: var(--bg-tertiary); }
+        .text-primary { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .border-themed { border-color: var(--border-color); }
+        .bg-brand { background-color: var(--brand-color); }
+        .text-brand { color: var(--brand-color); }
+        
+        /* Component Styles */
+        .active-nav { color: var(--brand-color); }
+        .active-nav .nav-indicator { width: 24px; height: 3px; background-color: var(--brand-color); border-radius: 9999px; margin-top: 2px; }
+        .mpin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #4a5568; transition: background-color 0.2s ease-in-out; }
+        .mpin-dot.filled { background-color: var(--brand-color); border-color: var(--brand-color); }
+        .keypad-btn:active { background-color: #4a5568; }
+        .page-content, .modal-content { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #login-screen { background: radial-gradient(circle at top left, rgba(244, 116, 55, 0.15), transparent 40%), radial-gradient(circle at bottom right, rgba(244, 116, 55, 0.15), transparent 50%), #000; }
+        .activity-tab-active { color: var(--brand-color); border-bottom: 2px solid var(--brand-color); }
+
+        /* Custom Slider Styles */
+        input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: var(--bg-tertiary); border-radius: 5px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--brand-color); cursor: pointer; border-radius: 50%; }
+            
+        /* Profile Menu Animation */
+        #profile-menu { transition: opacity 0.2s ease-out, transform 0.2s ease-out; transform: translateY(-10px) scale(0.95); opacity: 0; pointer-events: none; }
+        #profile-menu.active { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+        
+    </style>
+</head>
+<body class="bg-primary text-primary antialiased">
+    <!-- Login Screen -->
+    <div id="login-screen" class="max-w-md mx-auto min-h-screen flex flex-col justify-between p-8 text-center">
+        <div>
+            <i class="fas fa-credit-card text-brand text-5xl"></i>
+            <h1 class="text-4xl font-bold tracking-wider text-white mt-4">BOBCARD</h1>
+            <p class="text-gray-400 mt-2">Welcome Back!</p>
+            <div id="logout-message" class="text-green-400 text-sm mt-4 transition-opacity duration-500 opacity-0"></div>
+        </div>
+        <div>
+            <p class="text-gray-300">Enter your MPIN to login</p>
+            <div class="flex justify-center items-center space-x-4 my-4">
+                <div class="mpin-dot"></div><div class="mpin-dot"></div><div class="mpin-dot"></div><div class="mpin-dot"></div>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-6 text-white">
+            <button class="keypad-btn text-2xl font-bold p-4 rounded-full">1</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">2</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">3</button>
+            <button class="keypad-btn text-2xl font-bold p-4 rounded-full">4</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">5</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">6</button>
+            <button class="keypad-btn text-2xl font-bold p-4 rounded-full">7</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">8</button><button class="keypad-btn text-2xl font-bold p-4 rounded-full">9</button>
+            <div id="fingerprint-btn" class="flex items-center justify-center cursor-pointer"><i class="fas fa-fingerprint text-brand text-3xl"></i></div>
+            <button class="keypad-btn text-2xl font-bold p-4 rounded-full">0</button>
+            <button id="backspace-btn" class="flex items-center justify-center"><i class="fas fa-backspace text-2xl"></i></button>
+        </div>
+        <a href="#" class="text-sm text-gray-500 mt-8">Forgot MPIN?</a>
+    </div>
+    
+    <!-- Main App Screen -->
+    <div id="app-screen" class="max-w-md mx-auto min-h-screen flex-col hidden">
+        <header class="p-6 flex justify-between items-center sticky top-0 bg-primary z-20">
+            <div><p class="text-sm text-secondary" id="greeting">Welcome Back,</p><h1 class="text-xl font-bold text-primary">Alex Martin</h1></div>
+            <div class="flex items-center space-x-4"><i class="fas fa-bell text-xl text-secondary cursor-pointer"></i><img id="profile-btn" src="https://placehold.co/40x40/f47437/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full cursor-pointer"></div>
+        </header>
+        
+        <!-- Profile Dropdown -->
+        <div id="profile-menu" class="absolute top-20 right-6 bg-secondary border border-themed rounded-xl shadow-xl w-56 z-10 origin-top-right">
+             <div class="p-2">
+                <div class="flex items-center p-2"><img src="https://placehold.co/40x40/f47437/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full"><div class="ml-3"><p class="font-semibold text-primary text-sm">Alex Martin</p><p class="text-xs text-secondary">alex.m@example.com</p></div></div>
+                <div class="border-t border-themed my-2"></div>
+                <a href="#" class="flex items-center px-2 py-3 text-sm text-primary rounded-md hover:bg-tertiary transition-colors"><i class="fas fa-user-circle w-6 text-secondary"></i> My Profile</a>
+                <a href="#" class="flex items-center px-2 py-3 text-sm text-primary rounded-md hover:bg-tertiary transition-colors"><i class="fas fa-cog w-6 text-secondary"></i> Settings</a>
+                <div class="border-t border-themed my-2"></div>
+                <div class="flex justify-between items-center px-2 py-3 text-sm text-primary">
+                    <div class="flex items-center"><i class="fas fa-palette w-6 text-secondary"></i><span>Theme</span></div>
+                    <label id="theme-toggle-label" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="theme-toggle-checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-tertiary peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+                    </label>
+                </div>
+                <div class="border-t border-themed my-2"></div>
+                <a href="#" id="logout-btn" class="flex items-center px-2 py-3 text-sm text-red-500 rounded-md hover:bg-tertiary transition-colors"><i class="fas fa-sign-out-alt w-6"></i> Logout</a>
+            </div>
+        </div>
+
+        <main class="flex-grow px-6 pb-24 overflow-y-auto">
+            <div id="home-content" class="page-content">
+                <div class="card-flick pb-4 -mx-6 px-6">
+                    <div class="bg-gradient-to-tr from-[#f47437] to-[#d85a20] p-6 rounded-2xl shadow-lg h-48 flex flex-col justify-between text-white">
+                         <div>
+                            <div class="flex justify-between items-start"><h2 class="text-lg font-semibold tracking-wider">BOBCARD</h2><i class="fas fa-wifi transform -rotate-90"></i></div>
+                            <p class="text-xs text-orange-100 mt-1">Platinum</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-mono tracking-widest">**** **** **** 1234</p>
+                            <div class="flex justify-between items-end mt-2"><p class="font-semibold">ALEX MARTIN</p><img src="https://placehold.co/40x25/ffffff/000000?text=VISA" class="h-6" alt="Visa Logo"/></div>
+                        </div>
+                    </div>
+                     <div class="bg-gradient-to-br from-gray-700 to-gray-800 p-6 rounded-2xl shadow-lg h-48 flex flex-col justify-between text-white">
+                        <div>
+                            <div class="flex justify-between items-start"><h2 class="text-lg font-semibold tracking-wider">BOBCARD</h2><i class="fas fa-wifi transform -rotate-90"></i></div>
+                            <p class="text-xs text-gray-300 mt-1">Signature</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-mono tracking-widest">**** **** **** 5678</p>
+                            <div class="flex justify-between items-end mt-2"><p class="font-semibold">ALEX MARTIN</p><img src="https://placehold.co/50x30/ffffff/000000?text=MC" class="h-6" alt="Mastercard Logo"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-secondary p-5 rounded-2xl mt-4">
+                    <div class="flex justify-between items-center">
+                        <div><p class="text-sm text-secondary">Total Balance</p><p class="text-3xl font-bold text-primary mt-1">₹1,12,842.50</p></div>
+                        <button id="pay-now-btn" class="bg-brand text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-brand-dark transition-colors">Pay Now</button>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-themed flex justify-between">
+                        <div><p class="text-xs text-secondary">Available Credit</p><p class="font-semibold text-green-400">₹3,87,157.50</p></div>
+                        <div class="text-right"><p class="text-xs text-secondary">Due Date</p><p class="font-semibold text-primary">Sep 25, 2025</p></div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="font-semibold text-secondary mb-3">Quick Actions</h3>
+                    <div class="flex space-x-4 overflow-x-auto pb-2 -mx-6 px-6">
+                         <div class="flex-shrink-0 text-center w-20">
+                            <div class="bg-secondary rounded-2xl p-4 cursor-pointer hover:bg-tertiary transition-colors aspect-square flex items-center justify-center">
+                                <i class="fas fa-sliders-h text-brand text-2xl"></i>
+                            </div>
+                            <p class="text-sm mt-2 text-primary">Controls</p>
+                        </div>
+                        <div class="flex-shrink-0 text-center w-20">
+                            <div class="bg-secondary rounded-2xl p-4 cursor-pointer hover:bg-tertiary transition-colors aspect-square flex items-center justify-center">
+                                <i class="fas fa-file-invoice-dollar text-brand text-2xl"></i>
+                            </div>
+                            <p class="text-sm mt-2 text-primary">Statements</p>
+                        </div>
+                        <div class="flex-shrink-0 text-center w-20">
+                            <div class="bg-secondary rounded-2xl p-4 cursor-pointer hover:bg-tertiary transition-colors aspect-square flex items-center justify-center">
+                                <i class="fas fa-percentage text-brand text-2xl"></i>
+                            </div>
+                            <p class="text-sm mt-2 text-primary">EMI</p>
+                        </div>
+                        <div class="flex-shrink-0 text-center w-20">
+                            <div class="bg-secondary rounded-2xl p-4 cursor-pointer hover:bg-tertiary transition-colors aspect-square flex items-center justify-center">
+                                <i class="fas fa-user-plus text-brand text-2xl"></i>
+                            </div>
+                            <p class="text-sm mt-2 text-primary">Add-on</p>
+                        </div>
+                         <div class="flex-shrink-0 text-center w-20">
+                            <div class="bg-secondary rounded-2xl p-4 cursor-pointer hover:bg-tertiary transition-colors aspect-square flex items-center justify-center">
+                                <i class="fas fa-gift text-brand text-2xl"></i>
+                            </div>
+                            <p class="text-sm mt-2 text-primary">Offers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8"><div class="flex justify-between items-center mb-3"><h3 class="font-semibold text-secondary">Recent Transactions</h3><a href="#" class="text-sm text-brand font-medium">View All</a></div><div class="space-y-3"><div class="bg-secondary p-4 rounded-xl flex items-center justify-between"><div class="flex items-center"><div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-shopping-cart text-red-400"></i></div><div><p class="font-semibold text-primary">Amazon</p><p class="text-xs text-secondary">Shopping</p></div></div><p class="font-semibold text-red-400">-₹5,499</p></div></div></div>
+            </div>
+             <div id="cards-content" class="page-content hidden">
+                 <h2 class="text-2xl font-bold text-primary mb-4">My Cards</h2>
+                 <div class="bg-secondary p-5 rounded-2xl">
+                     <div class="flex items-center space-x-4 mb-4">
+                         <img src="eterna-shadow-19-feb24.jpg" class="rounded-lg w-20" alt="Card Art">
+                         <div><p class="font-bold text-primary">BOBCARD Eterna</p><p class="text-sm text-secondary">**** 1234</p></div>
+                     </div>
+                     <div class="flex items-center justify-between bg-tertiary p-3 rounded-lg"><div class="flex items-center space-x-3 text-primary"><i class="fas fa-snowflake text-cyan-400"></i><span>Freeze Card</span></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only"><div class="w-11 h-6 bg-tertiary rounded-full"><div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label></div>
+                     <div class="grid grid-cols-2 gap-4 text-left mt-4 pt-4 border-t border-themed">
+                         <div class="manage-pin-btn cursor-pointer p-3 rounded-lg hover:bg-tertiary flex items-center space-x-3"><i class="fas fa-key text-brand text-lg w-6 text-center"></i><span class="text-sm text-primary">Manage PIN</span></div>
+                         <div id="set-limits-btn" class="cursor-pointer p-3 rounded-lg hover:bg-tertiary flex items-center space-x-3"><i class="fas fa-sliders-h text-brand text-lg w-6 text-center"></i><span class="text-sm text-primary">Set Limits</span></div>
+                         <div id="block-card-btn" class="cursor-pointer p-3 rounded-lg hover:bg-tertiary flex items-center space-x-3"><i class="fas fa-ban text-red-500 text-lg w-6 text-center"></i><span class="text-sm text-red-500">Block Card</span></div>
+                         <div class="cursor-pointer p-3 rounded-lg hover:bg-tertiary flex items-center space-x-3"><i class="fas fa-info-circle text-brand text-lg w-6 text-center"></i><span class="text-sm text-primary">Details</span></div>
+                     </div>
+                 </div>
+            </div>
+            <div id="activity-content" class="page-content hidden">
+                <h2 class="text-2xl font-bold text-primary mb-4">Activity</h2>
+                <div class="bg-secondary p-5 rounded-2xl mb-6 relative">
+                    <canvas id="expenseChart"></canvas>
+                    <div id="chart-center-text" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-xs text-secondary">Total Spends</span>
+                        <span class="text-2xl font-bold text-primary"></span>
+                    </div>
+                </div>
+                <div id="transactions-view" class="space-y-4">
+                     <div>
+                         <p class="text-secondary font-bold mb-2">Today</p>
+                         <div class="bg-secondary p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center"><div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-tshirt text-red-400"></i></div><div><p class="font-semibold text-primary">Myntra</p><p class="text-xs text-secondary">Shopping</p></div></div>
+                            <div class="text-right"><p class="font-semibold text-red-400">-₹40,499</p><p class="text-xs text-secondary">Mon, 08 Sep, 12:15 AM</p></div>
+                        </div>
+                     </div>
+                     <div>
+                         <p class="text-secondary font-bold mb-2">Yesterday</p>
+                         <div class="bg-secondary p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center"><div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-utensils text-green-400"></i></div><div><p class="font-semibold text-primary">Zomato</p><p class="text-xs text-secondary">Food & Dining</p></div></div>
+                            <div class="text-right"><p class="font-semibold text-red-400">-₹12,750</p><p class="text-xs text-secondary">Sun, 07 Sep, 08:30 PM</p></div>
+                        </div>
+                     </div>
+                      <div>
+                         <p class="text-secondary font-bold mb-2">Sat, 06 Sep</p>
+                         <div class="space-y-3">
+                             <div class="bg-secondary p-4 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center"><div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-gas-pump text-purple-400"></i></div><div><p class="font-semibold text-primary">HPCL</p><p class="text-xs text-secondary">Fuel</p></div></div>
+                                <div class="text-right"><p class="font-semibold text-red-400">-₹6,000</p><p class="text-xs text-secondary">Sat, 06 Sep, 05:00 PM</p></div>
+                            </div>
+                            <div class="bg-secondary p-4 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center"><div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-plane text-blue-400"></i></div><div><p class="font-semibold text-primary">MakeMyTrip</p><p class="text-xs text-secondary">Travel</p></div></div>
+                                <div class="text-right"><p class="font-semibold text-red-400">-₹10,500</p><p class="text-xs text-secondary">Sat, 06 Sep, 02:10 PM</p></div>
+                           </div>
+                         </div>
+                     </div>
+                     <div>
+                         <p class="text-secondary font-bold mb-2">Wed, 03 Sep</p>
+                          <div class="bg-secondary p-4 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center"><div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-4"><i class="fas fa-lightbulb text-yellow-400"></i></div><div><p class="font-semibold text-primary">Electricity Bill</p><p class="text-xs text-secondary">Bills & Utilities</p></div></div>
+                            <div class="text-right"><p class="font-semibold text-red-400">-₹8,251</p><p class="text-xs text-secondary">Wed, 03 Sep, 11:00 AM</p></div>
+                        </div>
+                     </div>
+                </div>
+            </div>
+            <div id="rewards-content" class="page-content hidden">
+                <h2 class="text-2xl font-bold text-primary mb-4">Rewards Hub</h2>
+                <!-- Tier Status --><div class="bg-secondary p-5 rounded-2xl"><div class="flex justify-between items-center mb-3"><p class="font-bold text-primary"><i class="fas fa-medal text-yellow-400 mr-2"></i>Gold Member</p><a href="#" class="text-xs font-semibold text-brand">View Tiers</a></div><div class="w-full bg-tertiary rounded-full h-2 mb-1"><div class="bg-brand h-2 rounded-full" style="width: 75%"></div></div><p class="text-xs text-secondary">You are 2,500 points away from Platinum Tier!</p></div>
+                <!-- Points Summary --><div class="mt-6 grid grid-cols-3 gap-4 text-center"><div class="bg-secondary p-3 rounded-xl"><p class="font-bold text-primary text-lg">5,120</p><p class="text-xs text-secondary">Earned</p></div><div class="bg-secondary p-3 rounded-xl"><p class="font-bold text-primary text-lg">8,500</p><p class="text-xs text-secondary">Redeemed</p></div><div class="bg-secondary p-3 rounded-xl"><p class="font-bold text-red-500 text-lg">1,200</p><p class="text-xs text-secondary">Expiring</p></div></div>
+                <!-- Featured Offers --><div class="mt-6"><h3 class="font-semibold text-secondary mb-3">Featured For You</h3><div class="flex space-x-4 overflow-x-auto pb-2 -mx-6 px-6"><div class="flex-shrink-0 w-32 bg-secondary rounded-xl p-3 text-center"><img src="https://placehold.co/80x40/ffffff/000000?text=Amazon" class="mx-auto rounded h-10" alt="Amazon"><p class="text-xs mt-2 font-semibold text-primary">₹500 Voucher</p><p class="text-xs text-brand">2,000 pts</p></div><div class="flex-shrink-0 w-32 bg-secondary rounded-xl p-3 text-center"><img src="https://placehold.co/80x40/ffffff/000000?text=Myntra" class="mx-auto rounded h-10" alt="Myntra"><p class="text-xs mt-2 font-semibold text-primary">15% Off</p><p class="text-xs text-brand">1,500 pts</p></div></div></div>
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-secondary/80 backdrop-blur-sm border-t border-themed rounded-t-2xl">
+            <div class="flex justify-around py-3">
+                <a href="#" class="nav-item flex flex-col items-center text-secondary active-nav" data-tab="home"><i class="fas fa-home text-xl"></i><span class="text-xs mt-1">Home</span><div class="nav-indicator"></div></a>
+                <a href="#" class="nav-item flex flex-col items-center text-secondary" data-tab="cards"><i class="far fa-credit-card text-xl"></i><span class="text-xs mt-1">Cards</span><div class="nav-indicator hidden"></div></a>
+                <a href="#" class="nav-item flex flex-col items-center text-secondary" data-tab="activity"><i class="fas fa-chart-line text-xl"></i><span class="text-xs mt-1">Activity</span><div class="nav-indicator hidden"></div></a>
+                <a href="#" class="nav-item flex flex-col items-center text-secondary" data-tab="rewards"><i class="fas fa-gift text-xl"></i><span class="text-xs mt-1">Rewards</span><div class="nav-indicator hidden"></div></a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- MODALS -->
+    <div id="status-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50 p-4"><div class="modal-content bg-secondary w-full max-w-sm rounded-2xl p-6 text-center"><i id="status-modal-icon" class="text-5xl mb-4"></i><h2 id="status-modal-title" class="text-xl font-bold text-primary mb-2"></h2><p id="status-modal-message" class="text-secondary mb-6"></p><button id="status-modal-close-btn" class="w-full bg-brand text-white font-bold py-3 rounded-lg">Done</button></div></div>
+    <div id="pin-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="modal-content bg-secondary w-full max-w-sm rounded-2xl p-6"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-primary">Generate New PIN</h2><button id="pin-modal-close-btn" class="text-secondary text-2xl">&times;</button></div><div class="space-y-4"><p class="text-sm text-secondary">Enter a new 4-digit PIN for your card.</p><div><label class="text-xs font-semibold text-secondary">NEW PIN</label><input type="password" maxlength="4" class="w-full bg-tertiary text-primary text-center tracking-[1em] text-2xl p-2 rounded-lg mt-1" placeholder="••••"></div><div><label class="text-xs font-semibold text-secondary">CONFIRM PIN</label><input type="password" maxlength="4" class="w-full bg-tertiary text-primary text-center tracking-[1em] text-2xl p-2 rounded-lg mt-1" placeholder="••••"></div></div><button id="set-pin-confirm-btn" class="w-full bg-brand text-white font-bold py-3 rounded-lg mt-8">Set PIN</button></div></div>
+    <div id="set-limits-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="modal-content bg-secondary w-full max-w-sm rounded-2xl p-6"><div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-primary">Set Spending Limits</h2><button id="limits-modal-close-btn" class="text-secondary text-2xl">&times;</button></div><div class="space-y-6"><div><div class="flex justify-between items-center mb-2"><label class="font-semibold text-primary">Online</label><span class="text-sm font-mono text-brand">₹<span id="online-limit-value">50000</span></span></div><input id="online-limit-slider" type="range" min="0" max="100000" value="50000" step="1000"></div><div><div class="flex justify-between items-center mb-2"><label class="font-semibold text-primary">Point of Sale (POS)</label><span class="text-sm font-mono text-brand">₹<span id="pos-limit-value">75000</span></span></div><input id="pos-limit-slider" type="range" min="0" max="150000" value="75000" step="1000"></div><div><div class="flex justify-between items-center mb-2"><label class="font-semibold text-primary">ATM Withdrawal</label><span class="text-sm font-mono text-brand">₹<span id="atm-limit-value">20000</span></span></div><input id="atm-limit-slider" type="range" min="0" max="50000" value="20000" step="1000"></div></div><button id="save-limits-btn" class="w-full bg-brand text-white font-bold py-3 rounded-lg mt-8">Save Changes</button></div></div>
+    <div id="block-card-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4"><div class="modal-content bg-secondary w-full max-w-sm rounded-2xl p-6 text-center"><i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i><h2 class="text-xl font-bold text-primary mb-2">Block Card?</h2><p class="text-secondary mb-6">This action is permanent. Are you sure you want to block this card?</p><div class="flex gap-4"><button id="block-cancel-btn" class="w-full bg-tertiary text-primary font-bold py-3 rounded-lg">Cancel</button><button id="block-confirm-btn" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg">Confirm</button></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Global Elements ---
+            const body = document.body;
+            let expenseChartInstance;
+
+            // --- Function Declarations ---
+            function updateMpinDots() { mpinDots.forEach((dot, i) => dot.classList.toggle('filled', i < mpin.length)); }
+            
+            function login() { 
+                loginScreen.classList.add('hidden'); 
+                appScreen.classList.remove('hidden'); 
+                appScreen.classList.add('flex');
+                setGreeting();
+            }
+            
+            function logout() {
+                profileMenu.classList.remove('active');
+                appScreen.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                mpin = ''; 
+                updateMpinDots();
+
+                const logoutMessage = document.getElementById('logout-message');
+                logoutMessage.textContent = 'See you soon, Alex. Your financial world is secure with us.';
+                logoutMessage.classList.remove('opacity-0');
+
+                setTimeout(() => {
+                    logoutMessage.classList.add('opacity-0');
+                }, 4000);
+            }
+
+            function createExpenseChart() {
+                if (expenseChartInstance) { expenseChartInstance.destroy(); }
+                const ctx = document.getElementById('expenseChart').getContext('2d');
+                if (!ctx) return;
+                const data = [40499, 12750, 10500, 8251, 6000];
+                const total = data.reduce((a, b) => a + b, 0);
+                document.querySelector('#chart-center-text span:last-child').textContent = `₹${total.toLocaleString('en-IN')}`;
+                
+                expenseChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: ['Shopping', 'Food', 'Travel', 'Bills', 'Fuel'], datasets: [{ data: data, backgroundColor: ['#ef4444', '#22c55e', '#3b82f6', '#eab308', '#8b5cf6'], borderColor: getComputedStyle(body).getPropertyValue('--bg-secondary'), borderWidth: 8, borderRadius: 8 }] },
+                    options: { 
+                        responsive: true, 
+                        cutout: '80%', 
+                        plugins: { 
+                            legend: { 
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    color: getComputedStyle(body).getPropertyValue('--text-secondary'),
+                                    boxWidth: 12,
+                                    padding: 20,
+                                    font: { size: 12 }
+                                }
+                            } 
+                        } 
+                    }
+                });
+            }
+            
+            function showStatusModal(type, title, message) {
+                 const modal = document.getElementById('status-modal');
+                modal.querySelector('#status-modal-icon').className = type === 'success' ? 'fas fa-check-circle text-green-500 text-5xl mb-4' : 'fas fa-times-circle text-red-500 text-5xl mb-4';
+                modal.querySelector('#status-modal-title').textContent = title;
+                modal.querySelector('#status-modal-message').textContent = message;
+                modal.classList.remove('hidden');
+            }
+
+            function setTheme(isLight) {
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                body.classList.toggle('light-theme', isLight);
+                if (document.getElementById('activity-content').offsetParent) {
+                    setTimeout(createExpenseChart, 50);
+                }
+            }
+            
+            function setGreeting() {
+                const hour = new Date().getHours();
+                const greetingEl = document.getElementById('greeting');
+                if (hour < 12) greetingEl.textContent = 'Good Morning,';
+                else if (hour < 18) greetingEl.textContent = 'Good Afternoon,';
+                else greetingEl.textContent = 'Good Evening,';
+            }
+
+            // --- Variable Declarations ---
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app-screen');
+            const mpinDots = document.querySelectorAll('.mpin-dot');
+            let mpin = '';
+            const profileBtn = document.getElementById('profile-btn');
+            const profileMenu = document.getElementById('profile-menu');
+            const themeToggleCheckbox = document.getElementById('theme-toggle-checkbox');
+            
+            // --- Event Listeners ---
+            document.querySelectorAll('.keypad-btn').forEach(btn => btn.addEventListener('click', () => { if (mpin.length < 4) { mpin += btn.textContent; updateMpinDots(); if (mpin.length === 4) login(); }}));
+            document.getElementById('backspace-btn').addEventListener('click', () => { mpin = mpin.slice(0, -1); updateMpinDots(); });
+            document.getElementById('fingerprint-btn').addEventListener('click', login);
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetTab = this.dataset.tab;
+                    document.querySelectorAll('.nav-item').forEach(i => { i.classList.remove('active-nav'); i.querySelector('.nav-indicator').classList.add('hidden'); });
+                    this.classList.add('active-nav'); this.querySelector('.nav-indicator').classList.remove('hidden');
+                    document.querySelectorAll('.page-content').forEach(c => c.classList.add('hidden'));
+                    document.getElementById(targetTab + '-content').classList.remove('hidden');
+                    
+                    if (targetTab === 'activity' && !expenseChartInstance) {
+                        setTimeout(createExpenseChart, 50);
+                    }
+                });
+            });
+
+            profileBtn.addEventListener('click', (e) => { e.stopPropagation(); profileMenu.classList.toggle('active'); });
+            document.addEventListener('click', (e) => { if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) { profileMenu.classList.remove('active'); } });
+            
+            themeToggleCheckbox.addEventListener('change', () => {
+                setTheme(themeToggleCheckbox.checked);
+            });
+
+            document.getElementById('logout-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                logout();
+            });
+
+            // --- Modal Logic ---
+            document.getElementById('pay-now-btn').addEventListener('click', () => showStatusModal('success', 'Payment Successful', 'Your payment of ₹1,12,842.50 has been processed.'));
+            document.getElementById('status-modal-close-btn').addEventListener('click', () => document.getElementById('status-modal').classList.add('hidden'));
+
+            const pinModal = document.getElementById('pin-modal');
+            const limitsModal = document.getElementById('set-limits-modal');
+            const blockCardModal = document.getElementById('block-card-modal');
+
+            document.querySelectorAll('.manage-pin-btn').forEach(btn => btn.addEventListener('click', () => pinModal.classList.remove('hidden')));
+            document.getElementById('pin-modal-close-btn').addEventListener('click', () => pinModal.classList.add('hidden'));
+            document.getElementById('set-pin-confirm-btn').addEventListener('click', () => { pinModal.classList.add('hidden'); showStatusModal('success', 'PIN Updated', 'Your card PIN has been changed successfully.'); });
+            
+            document.getElementById('set-limits-btn').addEventListener('click', () => limitsModal.classList.remove('hidden'));
+            document.getElementById('limits-modal-close-btn').addEventListener('click', () => limitsModal.classList.add('hidden'));
+            document.getElementById('save-limits-btn').addEventListener('click', () => { limitsModal.classList.add('hidden'); showStatusModal('success', 'Limits Updated', 'Your spending limits have been saved.'); });
+
+            document.getElementById('block-card-btn').addEventListener('click', () => blockCardModal.classList.remove('hidden'));
+            document.getElementById('block-cancel-btn').addEventListener('click', () => blockCardModal.classList.add('hidden'));
+            document.getElementById('block-confirm-btn').addEventListener('click', () => { blockCardModal.classList.add('hidden'); showStatusModal('success', 'Card Blocked', 'Your card has been permanently blocked.'); });
+            
+            ['online', 'pos', 'atm'].forEach(type => {
+                const slider = document.getElementById(`${type}-limit-slider`);
+                const valueSpan = document.getElementById(`${type}-limit-value`);
+                slider.addEventListener('input', () => valueSpan.textContent = parseInt(slider.value).toLocaleString('en-IN'));
+                valueSpan.textContent = parseInt(slider.value).toLocaleString('en-IN');
+            });
+
+
+            // --- Initializations ---
+            const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+            const currentTheme = localStorage.getItem('theme');
+            const isLight = currentTheme === 'light' || (currentTheme === null && prefersLight);
+            themeToggleCheckbox.checked = isLight;
+            setTheme(isLight);
+        });
+    </script>
+</body>
+</html>
+
