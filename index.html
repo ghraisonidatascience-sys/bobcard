@@ -16,22 +16,11 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         ::-webkit-scrollbar { display: none; }
-        .card-flick {
-            scroll-snap-type: x mandatory;
-            overflow-x: auto;
-            display: flex;
-            padding-bottom: 1rem;
-        }
-        .card-flick > div {
-            scroll-snap-align: center;
-            flex: 0 0 85%;
-            margin-right: 1rem;
-        }
         
         /* Theming Variables */
         :root {
-            --brand-color: #f47437;
-            --brand-color-dark: #e0682f;
+            --brand-color: #D97706; /* Sophisticated Orange */
+            --brand-color-dark: #B45309;
             /* Dark Theme Colors */
             --bg-primary: #000000;
             --bg-secondary: #111827;
@@ -60,6 +49,7 @@
         .border-themed { border-color: var(--border-color); }
         .bg-brand { background-color: var(--brand-color); }
         .text-brand { color: var(--brand-color); }
+        .hover\:bg-brand-dark:hover { background-color: var(--brand-color-dark); }
         
         /* Component Styles */
         .active-nav { color: var(--brand-color); }
@@ -70,7 +60,7 @@
         .page-content, .modal-content { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        #login-screen { background: radial-gradient(circle at top left, rgba(244, 116, 55, 0.15), transparent 40%), radial-gradient(circle at bottom right, rgba(244, 116, 55, 0.15), transparent 50%), #000; }
+        #login-screen { background: radial-gradient(circle at top left, rgba(217, 119, 6, 0.1), transparent 40%), radial-gradient(circle at bottom right, rgba(217, 119, 6, 0.1), transparent 50%), #000; }
         .activity-tab-active { color: var(--brand-color); border-bottom: 2px solid var(--brand-color); }
 
         /* Custom Slider Styles */
@@ -113,13 +103,13 @@
     <div id="app-screen" class="max-w-md mx-auto min-h-screen flex-col hidden">
         <header class="p-6 flex justify-between items-center sticky top-0 bg-primary z-20">
             <div><p class="text-sm text-secondary" id="greeting">Welcome Back,</p><h1 class="text-xl font-bold text-primary">Alex Martin</h1></div>
-            <div class="flex items-center space-x-4"><i class="fas fa-bell text-xl text-secondary cursor-pointer"></i><img id="profile-btn" src="https://placehold.co/40x40/f47437/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full cursor-pointer"></div>
+            <div class="flex items-center space-x-4"><i class="fas fa-bell text-xl text-secondary cursor-pointer"></i><img id="profile-btn" src="https://placehold.co/40x40/D97706/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full cursor-pointer"></div>
         </header>
         
         <!-- Profile Dropdown -->
         <div id="profile-menu" class="absolute top-20 right-6 bg-secondary border border-themed rounded-xl shadow-xl w-56 z-10 origin-top-right">
              <div class="p-2">
-                <div class="flex items-center p-2"><img src="https://placehold.co/40x40/f47437/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full"><div class="ml-3"><p class="font-semibold text-primary text-sm">Alex Martin</p><p class="text-xs text-secondary">alex.m@example.com</p></div></div>
+                <div class="flex items-center p-2"><img src="https://placehold.co/40x40/D97706/ffffff?text=A" alt="User Profile" class="w-10 h-10 rounded-full"><div class="ml-3"><p class="font-semibold text-primary text-sm">Alex Martin</p><p class="text-xs text-secondary">alex.m@example.com</p></div></div>
                 <div class="border-t border-themed my-2"></div>
                 <a href="#" class="flex items-center px-2 py-3 text-sm text-primary rounded-md hover:bg-tertiary transition-colors"><i class="fas fa-user-circle w-6 text-secondary"></i> My Profile</a>
                 <a href="#" class="flex items-center px-2 py-3 text-sm text-primary rounded-md hover:bg-tertiary transition-colors"><i class="fas fa-cog w-6 text-secondary"></i> Settings</a>
@@ -138,32 +128,30 @@
 
         <main class="flex-grow px-6 pb-24 overflow-y-auto">
             <div id="home-content" class="page-content">
-                <div class="card-flick pb-4 -mx-6 px-6">
-                    <div class="bg-gradient-to-tr from-[#f47437] to-[#d85a20] p-6 rounded-2xl shadow-lg h-48 flex flex-col justify-between text-white">
-                         <div>
-                            <div class="flex justify-between items-start"><h2 class="text-lg font-semibold tracking-wider">BOBCARD</h2><i class="fas fa-wifi transform -rotate-90"></i></div>
-                            <p class="text-xs text-orange-100 mt-1">Platinum</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-mono tracking-widest">**** **** **** 1234</p>
-                            <div class="flex justify-between items-end mt-2"><p class="font-semibold">ALEX MARTIN</p><img src="https://placehold.co/40x25/ffffff/000000?text=VISA" class="h-6" alt="Visa Logo"/></div>
-                        </div>
+                <div class="relative aspect-[10/6] bg-gradient-to-br from-gray-400 via-gray-200 to-gray-500 rounded-2xl shadow-lg text-gray-800 p-6 flex flex-col justify-between">
+                    <div class="relative z-10 flex justify-between items-start">
+                        <div><h2 class="text-lg font-semibold tracking-wider text-gray-900">BOBCARD ETERNA</h2><p class="text-xs text-gray-700">Platinum</p></div>
+                        <div id="card-details-toggle" class="cursor-pointer p-2 bg-white/30 rounded-full w-10 h-10 flex items-center justify-center text-gray-800"><i class="fas fa-eye"></i></div>
                     </div>
-                     <div class="bg-gradient-to-br from-gray-700 to-gray-800 p-6 rounded-2xl shadow-lg h-48 flex flex-col justify-between text-white">
-                        <div>
-                            <div class="flex justify-between items-start"><h2 class="text-lg font-semibold tracking-wider">BOBCARD</h2><i class="fas fa-wifi transform -rotate-90"></i></div>
-                            <p class="text-xs text-gray-300 mt-1">Signature</p>
+                    <div class="relative z-10">
+                        <div id="card-number-cvv" class="text-center">
+                            <p id="card-number" class="text-2xl font-mono tracking-widest text-gray-900">**** **** **** 1234</p>
+                            <p id="card-cvv" class="text-sm font-mono tracking-widest hidden mt-1 text-gray-800">CVV: ***</p>
                         </div>
-                        <div>
-                            <p class="text-2xl font-mono tracking-widest">**** **** **** 5678</p>
-                            <div class="flex justify-between items-end mt-2"><p class="font-semibold">ALEX MARTIN</p><img src="https://placehold.co/50x30/ffffff/000000?text=MC" class="h-6" alt="Mastercard Logo"/></div>
+                        <div class="flex justify-between items-end mt-2">
+                            <p class="font-semibold text-gray-900">ALEX MARTIN</p>
+                            <img src="https://placehold.co/40x25/ffffff/000000?text=VISA" class="h-6" alt="Visa Logo"/>
                         </div>
                     </div>
                 </div>
-                <div class="bg-secondary p-5 rounded-2xl mt-4">
-                    <div class="flex justify-between items-center">
-                        <div><p class="text-sm text-secondary">Total Balance</p><p class="text-3xl font-bold text-primary mt-1">₹1,12,842.50</p></div>
-                        <button id="pay-now-btn" class="bg-brand text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-brand-dark transition-colors">Pay Now</button>
+
+                <div class="bg-secondary p-5 rounded-2xl mt-6">
+                    <div class="flex justify-between items-center flex-wrap">
+                        <div class="flex-1 min-w-max mr-4">
+                            <p class="text-sm text-secondary">Total Balance</p>
+                            <p class="text-3xl font-bold text-primary mt-1">₹1,12,842.50</p>
+                        </div>
+                        <button id="pay-now-btn" class="bg-brand text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-brand-dark transition-colors flex-shrink-0">Pay Now</button>
                     </div>
                     <div class="mt-4 pt-4 border-t border-themed flex justify-between">
                         <div><p class="text-xs text-secondary">Available Credit</p><p class="font-semibold text-green-400">₹3,87,157.50</p></div>
@@ -407,6 +395,24 @@
                         setTimeout(createExpenseChart, 50);
                     }
                 });
+            });
+            
+            document.getElementById('card-details-toggle').addEventListener('click', () => {
+                const cardNumberEl = document.getElementById('card-number');
+                const cardCvvEl = document.getElementById('card-cvv');
+                const toggleIcon = document.querySelector('#card-details-toggle i');
+                const isVisible = cardNumberEl.textContent.includes(' ');
+
+                if (isVisible) {
+                    cardNumberEl.textContent = '**** **** **** 1234';
+                    cardCvvEl.classList.add('hidden');
+                    toggleIcon.className = 'fas fa-eye';
+                } else {
+                    cardNumberEl.textContent = '4012 3456 7890 1234';
+                    cardCvvEl.textContent = 'CVV: 123';
+                    cardCvvEl.classList.remove('hidden');
+                    toggleIcon.className = 'fas fa-eye-slash';
+                }
             });
 
             profileBtn.addEventListener('click', (e) => { e.stopPropagation(); profileMenu.classList.toggle('active'); });
